@@ -4,8 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
 import { Upload, Copy, Download, RefreshCw, Trash2, ZoomIn, ZoomOut, Palette } from 'lucide-react';
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+
 
 // ASCII character sets from darkest to lightest
 const asciiCharSets = {
@@ -35,6 +34,8 @@ const ImageToAscii: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const colorCanvasRef = useRef<HTMLCanvasElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+  const previewImageRef = useRef<HTMLImageElement>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (charSet === 'custom' && customChars.trim() === '') {
@@ -67,6 +68,36 @@ const ImageToAscii: React.FC = () => {
     maxFiles: 1
   });
 
+  const enhanceImageContrast = (ctx, width, height) => {
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+    
+    // Trouver les valeurs min et max
+    let min = 255;
+    let max = 0;
+    
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const val = 0.3 * r + 0.59 * g + 0.11 * b;
+      
+      if (val < min) min = val;
+      if (val > max) max = val;
+    }
+    
+    // Appliquer l'étirement de contraste
+    const factor = 255 / (max - min);
+    
+    for (let i = 0; i < data.length; i += 4) {
+      data[i] = Math.min(255, Math.max(0, (data[i] - min) * factor));
+      data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - min) * factor));
+      data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - min) * factor));
+    }
+    
+    ctx.putImageData(imageData, 0, 0);
+  };
+
   const clearImage = () => {
     setImage(null);
     setAsciiArt('');
@@ -85,93 +116,97 @@ const ImageToAscii: React.FC = () => {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       
-      if (!ctx) {
-        throw new Error('Could not get canvas context');
-      }
+      if (!ctx) throw new Error('Could not get canvas context');
       
       const img = new Image();
       img.onload = () => {
-        // Calculate dimensions while maintaining aspect ratio
-        const maxWidth = 100; // Maximum width in characters
-        let width = Math.floor(img.width * resolution);
-        let height = Math.floor(img.height * resolution);
-        
-        // Adjust to maintain aspect ratio and fit within maxWidth
-        if (width > maxWidth) {
-          const ratio = maxWidth / width;
-          width = maxWidth;
-          height = Math.floor(height * ratio);
-        }
-        
-        // Set canvas dimensions
+        // Utiliser les dimensions exactes de l'image
         canvas.width = img.width;
         canvas.height = img.height;
-        
-        // Draw image on canvas
         ctx.drawImage(img, 0, 0);
+
+        // Améliorer le contraste
+        enhanceImageContrast(ctx, canvas.width, canvas.height);
         
-        // Get image data
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
+
+        // Calculer la taille optimale des caractères
+        const charWidth = Math.max(2, Math.floor(canvas.width / 300));
+        const charHeight = charWidth * 1.5; // Ratio pour maintenir la proportion
         
-        // Generate ASCII art
-        let result = '';
-        const chars = charSet === 'custom' ? customChars : asciiCharSets[charSet as keyof typeof asciiCharSets];
+        const cols = Math.floor(canvas.width / charWidth);
+        const rows = Math.floor(canvas.height / charHeight);
+
+        // Créer le canvas de sortie
+        const outputCanvas = document.createElement('canvas');
+        const outputCtx = outputCanvas.getContext('2d');
+        if (!outputCtx) throw new Error('Could not get output context');
+
+        // Configurer le canvas de sortie
+        outputCanvas.width = canvas.width;
+        outputCanvas.height = canvas.height;
+        outputCtx.fillStyle = '#ffffff';
+        outputCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
         
-        // For colored ASCII art
+        // Configurer le texte
+        outputCtx.font = `${charWidth}px monospace`;
+        outputCtx.textBaseline = 'top';
+
+        let asciiResult = '';
         const coloredResult: string[][] = [];
-        
-        for (let y = 0; y < canvas.height; y += canvas.height / height) {
+
+        for (let y = 0; y < rows; y++) {
           const coloredRow: string[] = [];
-          for (let x = 0; x < canvas.width; x += canvas.width / width) {
-            const pixelIndex = (Math.floor(y) * canvas.width + Math.floor(x)) * 4;
+          let rowString = '';
+
+          for (let x = 0; x < cols; x++) {
+            const pixelX = Math.floor(x * charWidth);
+            const pixelY = Math.floor(y * charHeight);
             
-            // Get RGB values
-            const r = data[pixelIndex];
-            const g = data[pixelIndex + 1];
-            const b = data[pixelIndex + 2];
-            
-            // Calculate grayscale value
-            let grayScale = (0.3 * r + 0.59 * g + 0.11 * b) / 255;
-            
-            // Invert if needed
-            if (inverted) {
-              grayScale = 1 - grayScale;
+            // Calculer la couleur moyenne du bloc
+            let r = 0, g = 0, b = 0;
+            let count = 0;
+
+            for (let py = 0; py < charHeight; py++) {
+              for (let px = 0; px < charWidth; px++) {
+                const idx = ((pixelY + py) * canvas.width + (pixelX + px)) * 4;
+                if (idx < data.length) {
+                  r += data[idx];
+                  g += data[idx + 1];
+                  b += data[idx + 2];
+                  count++;
+                }
+              }
             }
-            
-            // Map grayscale to character
-            const charIndex = Math.floor(grayScale * (chars.length - 1));
+
+            r = Math.floor(r / count);
+            g = Math.floor(g / count);
+            b = Math.floor(b / count);
+
+            // Calculer la luminosité et choisir le caractère
+            const brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            const chars = asciiCharSets[charSet as keyof typeof asciiCharSets];
+            const charIndex = Math.floor(brightness * (chars.length - 1));
             const char = chars[charIndex];
-            
-            result += char;
-            
-            // For colored version
-            if (preserveColors) {
-              const color = `rgb(${r}, ${g}, ${b})`;
-              coloredRow.push(`<span style="color:${color}">${char}</span>`);
-            } else {
-              coloredRow.push(char);
-            }
+
+            // Dessiner le caractère
+            outputCtx.fillStyle = `rgb(${r},${g},${b})`;
+            outputCtx.fillText(char, pixelX, pixelY);
+
+            rowString += char;
+            coloredRow.push(`<span style="color:rgb(${r},${g},${b})">${char}</span>`);
           }
-          result += '\n';
+          asciiResult += rowString + '\n';
           coloredResult.push(coloredRow);
         }
-        
-        setAsciiArt(result);
+
+        setAsciiArt(asciiResult);
         setColoredAsciiArt(coloredResult);
-        setIsLoading(false);
-        
-        // Generate colored preview
-        if (preserveColors && colorCanvasRef.current) {
-          renderColoredAsciiToCanvas(coloredResult, width, height);
-        }
-      };
-      
-      img.onerror = () => {
-        toast.error('Erreur lors du chargement de l\'image');
+        setPreviewImage(outputCanvas.toDataURL('image/png'));
         setIsLoading(false);
       };
-      
+
       img.src = image;
     } catch (error) {
       console.error('Error converting image to ASCII:', error);
@@ -201,47 +236,13 @@ const ImageToAscii: React.FC = () => {
       });
   };
 
-  const downloadAsciiArt = () => {
-    const element = document.createElement('a');
-    const file = new Blob([asciiArt], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = 'image-ascii-art.txt';
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-  };
-
-  const downloadColoredAsciiArt = () => {
-    if (!resultRef.current) return;
+  const downloadAsImage = () => {
+    if (!previewImageRef.current) return;
     
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Colored ASCII Art</title>
-        <style>
-          body {
-            background-color: ${backgroundColor};
-            font-family: monospace;
-            line-height: 1;
-            font-size: 10px;
-            white-space: pre;
-          }
-        </style>
-      </head>
-      <body>
-        <div>${coloredAsciiArt.map(row => row.join('')).join('<br>')}</div>
-      </body>
-      </html>
-    `;
-    
-    const element = document.createElement('a');
-    const file = new Blob([htmlContent], { type: 'text/html' });
-    element.href = URL.createObjectURL(file);
-    element.download = 'colored-ascii-art.html';
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    const link = document.createElement('a');
+    link.download = 'ascii-art.png';
+    link.href = previewImageRef.current.src;
+    link.click();
   };
 
   const zoomIn = () => {
@@ -250,6 +251,37 @@ const ImageToAscii: React.FC = () => {
 
   const zoomOut = () => {
     setZoom(prev => Math.max(prev - 0.2, 0.5));
+  };
+
+  const renderAsciiArt = () => {
+    if (!asciiArt) return null;
+
+    return (
+      <div 
+        style={{ 
+          fontFamily: 'monospace', 
+          lineHeight: '0.8',
+          fontSize: `${7 * zoom}px`,
+          letterSpacing: '-0.1em',
+          whiteSpace: 'pre',
+          backgroundColor: backgroundColor,
+          color: inverted ? backgroundColor : '#000000',
+          padding: '0',
+          overflow: 'hidden',
+          display: 'inline-block',
+          transformOrigin: 'top left',
+          transform: `scale(${zoom})`
+        }}
+      >
+        {preserveColors ? (
+          <div dangerouslySetInnerHTML={{ 
+            __html: coloredAsciiArt.map(row => row.join('')).join('\n') 
+          }} />
+        ) : (
+          asciiArt
+        )}
+      </div>
+    );
   };
 
   return (
@@ -443,7 +475,7 @@ const ImageToAscii: React.FC = () => {
                 <Copy className="h-5 w-5 text-gray-700" />
               </button>
               <button
-                onClick={preserveColors ? downloadColoredAsciiArt : downloadAsciiArt}
+                onClick={downloadAsImage}
                 disabled={!asciiArt}
                 className="p-2 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors disabled:opacity-50"
                 title="Télécharger l'ASCII art"
@@ -458,42 +490,13 @@ const ImageToAscii: React.FC = () => {
             className="border border-gray-300 rounded-md overflow-auto p-4 h-96"
             style={{ backgroundColor }}
           >
-            {preserveColors && coloredAsciiArt.length > 0 ? (
-              <div 
-                style={{ 
-                  fontFamily: 'monospace', 
-                  lineHeight: '1', 
-                  whiteSpace: 'pre',
-                  fontSize: `${8 * zoom}px`,
-                  transform: `scale(${zoom})`,
-                  transformOrigin: 'top left'
-                }}
-                dangerouslySetInnerHTML={{ 
-                  __html: coloredAsciiArt.map(row => row.join('')).join('<br>') 
-                }}
-              />
-            ) : asciiArt ? (
-              <SyntaxHighlighter
-                language="text"
-                style={docco}
-                customStyle={{ 
-                  backgroundColor: 'transparent',
-                  color: '#000000',
-                  margin: 0,
-                  padding: 0,
-                  fontSize: `${7 * zoom}px`,
-                  lineHeight: '0.8rem',
-                  fontFamily: 'monospace'
-                }}
-                wrapLines={true}
-              >
-                {asciiArt}
-              </SyntaxHighlighter>
+            {asciiArt ? (
+              renderAsciiArt()
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-gray-500 italic">
                 <Palette className="h-12 w-12 mb-4 text-indigo-300" />
                 <p>Le résultat de l'ASCII art apparaîtra ici...</p>
-                <p className="text-sm mt-2">Téléchargez une image et cliquez sur &quot; Convertir &quot; pour commencer</p>
+                <p className="text-sm mt-2">Téléchargez une image et cliquez sur &quot;Convertir&quot; pour commencer</p>
               </div>
             )}
           </div>
