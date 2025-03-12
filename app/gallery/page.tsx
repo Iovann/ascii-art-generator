@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
@@ -178,13 +178,13 @@ const Gallery: React.FC = () => {
         </p>
         <div className="flex flex-wrap justify-center gap-4">
           <Link 
-            to="/text-to-ascii" 
+            href={"/text-to-ascii"} 
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md"
           >
             Convertir du texte
           </Link>
           <Link 
-            to="/image-to-ascii" 
+            href={"/image-to-ascii"}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md"
           >
             Convertir une image

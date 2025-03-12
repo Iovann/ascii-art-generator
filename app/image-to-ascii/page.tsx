@@ -19,7 +19,8 @@ const asciiCharSets = {
   custom: ''
 };
 
-const ImageToAscii: React.FC = () => {
+export default function ImageToAscii () {
+
   const [image, setImage] = useState<string | null>(null);
   const [asciiArt, setAsciiArt] = useState('');
   const [coloredAsciiArt, setColoredAsciiArt] = useState<string[][]>([]);
@@ -68,10 +69,9 @@ const ImageToAscii: React.FC = () => {
     maxFiles: 1
   });
 
-  const enhanceImageContrast = (ctx, width, height) => {
+  const enhanceImageContrast = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
     const imageData = ctx.getImageData(0, 0, width, height);
     const data = imageData.data;
-    
     // Trouver les valeurs min et max
     let min = 255;
     let max = 0;
@@ -290,9 +290,9 @@ const ImageToAscii: React.FC = () => {
         Convertir une Image en ASCII Art
       </h1>
       
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid lg:grid-cols-2 gap-8">
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Image d'entrée</h2>
+          <h2 className="text-xl font-semibold mb-4 text-gray-800">Image d&apos;entrée</h2>
           
           {!image ? (
             <div 
@@ -406,7 +406,7 @@ const ImageToAscii: React.FC = () => {
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                   />
                   <label htmlFor="preserveColors" className="ml-2 block text-sm text-gray-700">
-                    Préserver les couleurs de l'image
+                    Préserver les couleurs de l&apos;image
                   </label>
                 </div>
               </div>
@@ -495,7 +495,7 @@ const ImageToAscii: React.FC = () => {
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-gray-500 italic">
                 <Palette className="h-12 w-12 mb-4 text-indigo-300" />
-                <p>Le résultat de l'ASCII art apparaîtra ici...</p>
+                <p>Le résultat de l&apos;ASCII art apparaîtra ici...</p>
                 <p className="text-sm mt-2">Téléchargez une image et cliquez sur &quot;Convertir&quot; pour commencer</p>
               </div>
             )}
@@ -516,5 +516,3 @@ const ImageToAscii: React.FC = () => {
     </div>
   );
 };
-
-export default ImageToAscii;
