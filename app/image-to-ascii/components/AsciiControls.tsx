@@ -1,8 +1,7 @@
-'use client'
+"use client";
 
-import React from 'react';
-import { RefreshCw, Trash2 } from 'lucide-react';
-import { asciiCharSets } from '../constants';
+import React from "react";
+import { RefreshCw } from "lucide-react";
 
 interface AsciiControlsProps {
   image: string;
@@ -21,10 +20,11 @@ interface AsciiControlsProps {
   onPreserveColorsChange: (value: boolean) => void;
   onBackgroundColorChange: (value: string) => void;
   onConvert: () => void;
+  imageWidth?: number | null;
+  imageHeight?: number | null;
 }
 
-export  function AsciiControls({
-  image,
+export function AsciiControls({
   charSet,
   customChars,
   resolution,
@@ -32,34 +32,31 @@ export  function AsciiControls({
   preserveColors,
   backgroundColor,
   isLoading,
-  onClearImage,
   onCharSetChange,
   onCustomCharsChange,
   onResolutionChange,
   onInvertedChange,
   onPreserveColorsChange,
   onBackgroundColorChange,
-  onConvert
+  onConvert,
+  imageWidth,
+  imageHeight,
 }: AsciiControlsProps) {
+  // Résolution max adaptative selon la taille de l'image
+  const baseMax = 2;
+  const refSize = 800;
+  const maxResolution =
+    imageWidth && imageHeight
+      ? Math.max(0.3, baseMax * (refSize / Math.max(imageWidth, imageHeight)))
+      : baseMax;
+
   return (
     <div className="space-y-4">
-      {/* <div className="relative">
-        <img 
-          src={image} 
-          alt="Uploaded" 
-          className="w-full h-auto rounded-lg border border-gray-300" 
-        />
-        <button
-          onClick={onClearImage}
-          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-          title="Supprimer l'image"
-        >
-          <Trash2 className="h-5 w-5" />
-        </button>
-      </div> */}
-
       <div className="mb-4">
-        <label htmlFor="charSet" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="charSet"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Ensemble de caractères
         </label>
         <select
@@ -80,9 +77,12 @@ export  function AsciiControls({
         </select>
       </div>
 
-      {charSet === 'custom' && (
+      {charSet === "custom" && (
         <div className="mb-4">
-          <label htmlFor="customChars" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="customChars"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Caractères personnalisés (du plus sombre au plus clair)
           </label>
           <input
@@ -97,18 +97,22 @@ export  function AsciiControls({
       )}
 
       <div className="mb-4">
-        <label htmlFor="resolution" className="block text-sm font-medium text-gray-700 mb-1">
-          Résolution: {Math.round(resolution * 100)}%
+        <label
+          htmlFor="resolution"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Résolution: {Math.round(resolution * 100)}% (max:{" "}
+          {Math.round(maxResolution * 100)}%)
         </label>
         <input
           id="resolution"
           type="range"
           min="0.1"
-          max="2"
+          max={maxResolution}
           step="0.05"
           value={resolution}
           onChange={(e) => onResolutionChange(parseFloat(e.target.value))}
-          className="w-full"
+          disabled={isLoading}
         />
       </div>
 
@@ -121,7 +125,10 @@ export  function AsciiControls({
             onChange={(e) => onInvertedChange(e.target.checked)}
             className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
           />
-          <label htmlFor="inverted" className="ml-2 block text-sm text-gray-700">
+          <label
+            htmlFor="inverted"
+            className="ml-2 block text-sm text-gray-700"
+          >
             Inverser les couleurs
           </label>
         </div>
@@ -134,14 +141,20 @@ export  function AsciiControls({
             onChange={(e) => onPreserveColorsChange(e.target.checked)}
             className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
           />
-          <label htmlFor="preserveColors" className="ml-2 block text-sm text-gray-700">
+          <label
+            htmlFor="preserveColors"
+            className="ml-2 block text-sm text-gray-700"
+          >
             Préserver les couleurs de l&apos;image
           </label>
         </div>
       </div>
 
       <div className="mb-4">
-        <label htmlFor="backgroundColor" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="backgroundColor"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Couleur de fond
         </label>
         <input
@@ -164,9 +177,9 @@ export  function AsciiControls({
             Conversion en cours...
           </>
         ) : (
-          'Convertir en ASCII Art'
+          "Convertir en ASCII Art"
         )}
       </button>
     </div>
   );
-}; 
+}

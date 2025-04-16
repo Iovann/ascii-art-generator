@@ -7,10 +7,12 @@ import { toast } from 'react-toastify';
 
 interface ImageUploaderProps {
   image: string | null;
-  onImageChange: (image: string | null) => void;
+  width: number | null;
+  height: number | null;
+  onImageChange: (image: string | null, width: number | null, height: number | null) => void;
 }
 
-export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, onImageChange }) => {
+export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, width, height, onImageChange }) => {
   const onDrop = (acceptedFiles: File[]) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
@@ -18,10 +20,13 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, onImageChan
         toast.error('Veuillez télécharger une image valide');
         return;
       }
-      
       const reader = new FileReader();
       reader.onload = () => {
-        onImageChange(reader.result as string);
+        const img = new window.Image();
+        img.onload = () => {
+          onImageChange(reader.result as string, img.width, img.height);
+        };
+        img.src = reader.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -36,7 +41,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, onImageChan
   });
 
   const clearImage = () => {
-    onImageChange(null);
+    onImageChange(null, null, null);
   };
 
   return (

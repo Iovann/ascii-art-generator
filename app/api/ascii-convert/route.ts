@@ -62,16 +62,26 @@ export async function POST(request: Request) {
     }
 
     const buffer = Buffer.from(await imageFile.arrayBuffer());
-    const metadata = await sharp(buffer).metadata();
+    let metadata = await sharp(buffer).metadata();
+
+    // Redimensionnement intermédiaire intelligent pour robustesse mémoire
+    const MAX_INTERMEDIATE_DIM = 1200; // Taille intermédiaire max (modifiable)
+    let processBuffer = buffer;
+    if ((metadata.width || 0) > MAX_INTERMEDIATE_DIM || (metadata.height || 0) > MAX_INTERMEDIATE_DIM) {
+      processBuffer = await sharp(buffer)
+        .resize(MAX_INTERMEDIATE_DIM, MAX_INTERMEDIATE_DIM, { fit: 'inside' })
+        .toBuffer();
+      metadata = await sharp(processBuffer).metadata();
+    }
 
     const MAX_WIDTH = 400;
     const targetWidth = Math.min(config.width || 100, MAX_WIDTH);
     const aspectRatio = (metadata.height || 1) / (metadata.width || 1);
     const targetHeight = Math.floor(targetWidth * aspectRatio * 0.5);
 
-    // Traiter l'image pour obtenir les pixels
-    const processedImage = await sharp(buffer)
-      .resize(targetWidth, targetHeight, { fit: "fill" })
+    // Resize final pour l'ASCII (toujours sur image réduite)
+    const processedImage = await sharp(processBuffer)
+      .resize(targetWidth, targetHeight, { fit: "inside" }) // Conserve le ratio, pas d'étirement ni crop
       .raw()
       .toBuffer({ resolveWithObject: true });
 
