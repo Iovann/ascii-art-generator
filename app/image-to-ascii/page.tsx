@@ -100,7 +100,7 @@ export default function ImageToAscii () {
         inverted,
         preserveColors,
         backgroundColor,
-        width: Math.floor(100 * resolution)
+        width: Math.floor(300 * resolution)
       }));
 
       const response = await fetch('/api/ascii-convert', {
@@ -110,6 +110,7 @@ export default function ImageToAscii () {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Erreur de conversion:', errorData);
         throw new Error(errorData.error || 'Erreur lors de la conversion');
       }
 
@@ -120,6 +121,7 @@ export default function ImageToAscii () {
       setAsciiResult(imageUrl);
       // Nettoyer l'URL créée quand l'image est chargée
       previewImageRef.current?.addEventListener('load', () => {
+
         URL.revokeObjectURL(imageUrl);
       }, { once: true });
 

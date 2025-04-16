@@ -64,7 +64,8 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(await imageFile.arrayBuffer());
     const metadata = await sharp(buffer).metadata();
 
-    const targetWidth = config.width || 100;
+    const MAX_WIDTH = 400;
+    const targetWidth = Math.min(config.width || 100, MAX_WIDTH);
     const aspectRatio = (metadata.height || 1) / (metadata.width || 1);
     const targetHeight = Math.floor(targetWidth * aspectRatio * 0.5);
 
@@ -85,7 +86,8 @@ export async function POST(request: Request) {
       // Version simple sans couleurs - génération directe de l'image avec le texte ASCII
       const fontSize = 12;
       const lineHeight = fontSize * 1.2;
-      const padding = 20;
+      // Supprimer le padding ici
+      const padding = 0;
       const lines = asciiArt.split("\n");
       const outputWidth = targetWidth * (fontSize * 0.6) + padding * 2;
       const outputHeight = lines.length * lineHeight + padding * 2;
@@ -122,8 +124,13 @@ export async function POST(request: Request) {
       });
     } else {
       // Version avec préservation des couleurs - création d'une image basée sur les pixels colorés
-      const canvasWidth = targetWidth * 8; // Ajuster selon les besoins
-      const canvasHeight = targetHeight * 16; // Ajuster selon les besoins
+      // Calculer les dimensions exactes nécessaires (sans padding)
+      const fontSize = 8;
+      const charWidth = fontSize * 0.6;
+      const charHeight = fontSize * 1.2;
+      
+      const canvasWidth = targetWidth * charWidth;
+      const canvasHeight = targetHeight * charHeight;
 
       // Créer une image pixel par pixel pour préserver les couleurs
       const canvas = sharp({
@@ -135,15 +142,11 @@ export async function POST(request: Request) {
         },
       });
 
-      // Préparer un SVG qui préserve les couleurs
+      // Préparer un SVG qui préserve les couleurs (sans padding)
       let svgContent = `<svg width="${canvasWidth}" height="${canvasHeight}" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" fill="${
           config.backgroundColor || "#ffffff"
         }"/>`;
-
-      const fontSize = 8;
-      const charWidth = fontSize * 0.6;
-      const charHeight = fontSize * 1.2;
 
       for (let y = 0; y < targetHeight; y++) {
         for (let x = 0; x < targetWidth; x++) {
