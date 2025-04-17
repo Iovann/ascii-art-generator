@@ -24,6 +24,8 @@ interface AsciiConfig {
   preserveColors: boolean;
   backgroundColor?: string;
   width?: number;
+  // Nouveau paramètre pour permettre l'ajustement manuel des proportions
+  aspectCorrection?: number;
 }
 
 /**
@@ -48,6 +50,8 @@ export async function POST(request: Request) {
       inverted: false,
       preserveColors: true,
       width: 300,
+      // Valeur par défaut du facteur de correction (peut être ajusté selon le rendu souhaité)
+      aspectCorrection: 0.5,
     };
 
     try {
@@ -64,12 +68,12 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(await imageFile.arrayBuffer());
     let metadata = await sharp(buffer).metadata();
 
-    // Redimensionnement intermédiaire intelligent pour robustesse mémoire
-    const MAX_INTERMEDIATE_DIM = 1200; // Taille intermédiaire max (modifiable)
+    // Réduction systématique des images trop grandes
+    const MAX_DIM = 800; // Taille raisonnable pour le traitement ASCII
     let processBuffer = buffer;
-    if ((metadata.width || 0) > MAX_INTERMEDIATE_DIM || (metadata.height || 0) > MAX_INTERMEDIATE_DIM) {
+    if ((metadata.width || 0) > MAX_DIM || (metadata.height || 0) > MAX_DIM) {
       processBuffer = await sharp(buffer)
-        .resize(MAX_INTERMEDIATE_DIM, MAX_INTERMEDIATE_DIM, { fit: 'inside' })
+        .resize(MAX_DIM, MAX_DIM, { fit: 'inside' })
         .toBuffer();
       metadata = await sharp(processBuffer).metadata();
     }
@@ -77,11 +81,14 @@ export async function POST(request: Request) {
     const MAX_WIDTH = 400;
     const targetWidth = Math.min(config.width || 100, MAX_WIDTH);
     const aspectRatio = (metadata.height || 1) / (metadata.width || 1);
-    const targetHeight = Math.floor(targetWidth * aspectRatio * 0.5);
+    
+    // Utilisation du facteur de correction pour maintenir les proportions (0.65 donne plus de hauteur, proche du rendu monospace)
+    const aspectCorrection = config.aspectCorrection || 0.65;
+    const targetHeight = Math.floor(targetWidth * aspectRatio * aspectCorrection);
 
-    // Resize final pour l'ASCII (toujours sur image réduite)
+    // Traiter l'image pour obtenir les pixels (toujours sur l'image réduite)
     const processedImage = await sharp(processBuffer)
-      .resize(targetWidth, targetHeight, { fit: "inside" }) // Conserve le ratio, pas d'étirement ni crop
+      .resize(targetWidth, targetHeight, { fit: "fill" }) // Utiliser 'fill' pour respecter exactement les dimensions
       .raw()
       .toBuffer({ resolveWithObject: true });
 
@@ -95,12 +102,15 @@ export async function POST(request: Request) {
     if (!config.preserveColors) {
       // Version simple sans couleurs - génération directe de l'image avec le texte ASCII
       const fontSize = 12;
-      const lineHeight = fontSize * 1.2;
-      // Supprimer le padding ici
+      // Réduire l'interligne pour un meilleur aspect ratio
+      const lineHeight = fontSize;
       const padding = 0;
       const lines = asciiArt.split("\n");
-      const outputWidth = targetWidth * (fontSize * 0.6) + padding * 2;
-      const outputHeight = lines.length * lineHeight + padding * 2;
+      
+      // Maintenir les mêmes proportions pour la sortie finale
+      const charWidth = fontSize * 0.6; // Facteur typique pour une police monospace
+      const outputWidth = targetWidth * charWidth + padding * 2;
+      const outputHeight = targetHeight * fontSize + padding * 2;
 
       const svgImage = `
         <svg width="${outputWidth}" height="${outputHeight}" xmlns="http://www.w3.org/2000/svg">
@@ -109,7 +119,7 @@ export async function POST(request: Request) {
           }"/>
           <text x="${padding}" y="${padding + fontSize}" 
                 font-family="monospace" font-size="${fontSize}px" 
-                letter-spacing="-0.1em" line-height="1"
+                letter-spacing="0" line-height="1"
                 fill="${config.inverted ? "#ffffff" : "#000000"}">
             ${lines
               .map(
@@ -133,26 +143,16 @@ export async function POST(request: Request) {
         },
       });
     } else {
-      // Version avec préservation des couleurs - création d'une image basée sur les pixels colorés
-      // Calculer les dimensions exactes nécessaires (sans padding)
+      // Version avec préservation des couleurs
       const fontSize = 8;
       const charWidth = fontSize * 0.6;
-      const charHeight = fontSize * 1.2;
+      // Ajustement pour respecter les proportions
+      const charHeight = fontSize;
       
       const canvasWidth = targetWidth * charWidth;
       const canvasHeight = targetHeight * charHeight;
 
-      // Créer une image pixel par pixel pour préserver les couleurs
-      const canvas = sharp({
-        create: {
-          width: canvasWidth,
-          height: canvasHeight,
-          channels: 4,
-          background: config.backgroundColor || "#ffffff",
-        },
-      });
-
-      // Préparer un SVG qui préserve les couleurs (sans padding)
+      // Préparer un SVG qui préserve les couleurs
       let svgContent = `<svg width="${canvasWidth}" height="${canvasHeight}" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" fill="${
           config.backgroundColor || "#ffffff"
@@ -167,6 +167,7 @@ export async function POST(request: Request) {
               y * charHeight + fontSize
             }" 
                                  font-family="monospace" font-size="${fontSize}px" 
+                                 letter-spacing="0"
                                  fill="rgb(${r},${g},${b})">${char
               .replace(/&/g, "&amp;")
               .replace(/</g, "&lt;")

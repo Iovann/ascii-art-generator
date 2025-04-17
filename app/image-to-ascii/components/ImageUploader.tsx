@@ -4,15 +4,14 @@ import React from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import Image from 'next/image';
 
 interface ImageUploaderProps {
   image: string | null;
-  width: number | null;
-  height: number | null;
-  onImageChange: (image: string | null, width: number | null, height: number | null) => void;
+  onImageChange: (image: string | null) => void;
 }
 
-export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, width, height, onImageChange }) => {
+export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, onImageChange }) => {
   const onDrop = (acceptedFiles: File[]) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
@@ -24,7 +23,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, width, heig
       reader.onload = () => {
         const img = new window.Image();
         img.onload = () => {
-          onImageChange(reader.result as string, img.width, img.height);
+          onImageChange(reader.result as string);
         };
         img.src = reader.result as string;
       };
@@ -41,7 +40,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, width, heig
   });
 
   const clearImage = () => {
-    onImageChange(null, null, null);
+    onImageChange(null);
   };
 
   return (
@@ -66,10 +65,13 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, width, heig
         </div>
       ) : (
         <div className="relative">
-          <img 
-            src={image} 
-            alt="Uploaded" 
-            className="w-full h-auto rounded-lg border border-gray-300" 
+          <Image
+            src={image}
+            alt="Uploaded"
+            width={600}
+            height={400}
+            className="w-full h-auto rounded-lg border border-gray-300"
+            unoptimized
           />
           <button
             onClick={clearImage}

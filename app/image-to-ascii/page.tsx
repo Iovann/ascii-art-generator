@@ -1,9 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { useDropzone } from "react-dropzone";
+import React, { useState } from "react";
 import { toast } from "react-toastify";
-import { asciiCharSets } from "./constants";
 import { ImageUploader } from "./components/ImageUploader";
 import { AsciiControls } from "./components/AsciiControls";
 import { AsciiResult } from "./components/AsciiResult";
@@ -11,8 +9,7 @@ import { Tips } from "./components/Tips";
 
 export default function ImageToAscii() {
   const [image, setImage] = useState<string | null>(null);
-  const [asciiArt, setAsciiArt] = useState("");
-  const [coloredAsciiArt, setColoredAsciiArt] = useState<string[][]>([]);
+  const [asciiResult, setAsciiResult] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [charSet, setCharSet] = useState("standard");
   const [customChars, setCustomChars] = useState("");
@@ -21,58 +18,20 @@ export default function ImageToAscii() {
   const [preserveColors, setPreserveColors] = useState(true);
   const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [zoom, setZoom] = useState(1);
-  const [imageWidth, setImageWidth] = useState<number | null>(null);
-  const [imageHeight, setImageHeight] = useState<number | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const colorCanvasRef = useRef<HTMLCanvasElement>(null);
-  const [asciiResult, setAsciiResult] = useState<string>("");
-  const previewImageRef = useRef<HTMLImageElement | null>(null);
 
-  useEffect(() => {
-    if (charSet === "custom" && customChars.trim() === "") {
-      setCustomChars(asciiCharSets.standard);
-    }
-  }, [charSet, customChars]);
-
-  const onDrop = (acceptedFiles: File[]) => {
-    if (acceptedFiles && acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-
-      if (!file.type.startsWith("image/")) {
-        toast.error("Veuillez télécharger une image valide");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      "image/*": [],
-    },
-    maxFiles: 1,
-  });
-
+  // Nettoie l'image et le résultat ASCII
   const clearImage = () => {
     setImage(null);
-    setAsciiArt("");
-    setColoredAsciiArt([]);
+    setAsciiResult("");
   };
 
+  // Conversion image -> ASCII (API call)
   const convertImageToAscii = async () => {
     if (!image) {
       toast.error("Veuillez d'abord télécharger une image");
       return;
     }
-
     setIsLoading(true);
-
     try {
       // Convertir l'image base64 en File
       const base64Data = image.split(",")[1];
@@ -124,14 +83,6 @@ export default function ImageToAscii() {
       const imageUrl = URL.createObjectURL(imageBlob);
       console.log(imageUrl);
       setAsciiResult(imageUrl);
-      // Nettoyer l'URL créée quand l'image est chargée
-      previewImageRef.current?.addEventListener(
-        "load",
-        () => {
-          URL.revokeObjectURL(imageUrl);
-        },
-        { once: true }
-      );
     } catch (error) {
       console.error("Erreur:", error);
       toast.error("Erreur lors de la conversion en ASCII");
@@ -140,18 +91,11 @@ export default function ImageToAscii() {
     }
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard
-      .writeText(asciiArt)
-      .then(() => {
-        toast.success("ASCII art copié dans le presse-papiers");
-      })
-      .catch((error) => {
-        console.error("Error copying to clipboard:", error);
-        toast.error("Erreur lors de la copie dans le presse-papiers");
-      });
-  };
+  // Zoom controls
+  const zoomIn = () => setZoom((prev) => Math.min(prev + 0.2, 3));
+  const zoomOut = () => setZoom((prev) => Math.max(prev - 0.2, 0.5));
 
+  // Télécharger l'image ASCII
   const downloadAsImage = () => {
     if (!asciiResult) return;
     const link = document.createElement("a");
@@ -159,37 +103,21 @@ export default function ImageToAscii() {
     link.href = asciiResult;
     link.click();
   };
-  const zoomIn = () => {
-    setZoom((prev) => Math.min(prev + 0.2, 3));
-  };
-
-  const zoomOut = () => {
-    setZoom((prev) => Math.max(prev - 0.2, 0.5));
-  };
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6 text-center text-indigo-800">
-        Convertir une Image en ASCII Art
+        Convertir une image en ASCII Art
       </h1>
-
-      <div className="grid lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">
-            Image d&apos;entrée
-          </h2>
-
-          <ImageUploader 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <ImageUploader
             image={image}
-            onImageChange={(img, w, h) => {
-              setImage(img);
-              setImageWidth(w);
-              setImageHeight(h);
-            }}
+            onImageChange={setImage}
           />
-
           {image && (
             <AsciiControls
+              image={image}
               charSet={charSet}
               customChars={customChars}
               resolution={resolution}
@@ -197,6 +125,7 @@ export default function ImageToAscii() {
               preserveColors={preserveColors}
               backgroundColor={backgroundColor}
               isLoading={isLoading}
+              onClearImage={clearImage}
               onCharSetChange={setCharSet}
               onCustomCharsChange={setCustomChars}
               onResolutionChange={setResolution}
@@ -204,12 +133,9 @@ export default function ImageToAscii() {
               onPreserveColorsChange={setPreserveColors}
               onBackgroundColorChange={setBackgroundColor}
               onConvert={convertImageToAscii}
-              imageWidth={imageWidth}
-              imageHeight={imageHeight}
             />
           )}
         </div>
-
         <div className="bg-white p-6 rounded-lg shadow-md">
           <AsciiResult
             backgroundColor={backgroundColor}
@@ -221,12 +147,7 @@ export default function ImageToAscii() {
           />
         </div>
       </div>
-
       <Tips />
-
-      {/* Canvas cachés pour le traitement d'image */}
-      <canvas ref={canvasRef} style={{ display: "none" }} />
-      <canvas ref={colorCanvasRef} style={{ display: "none" }} />
     </div>
   );
 }

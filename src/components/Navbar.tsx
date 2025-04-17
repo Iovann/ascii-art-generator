@@ -38,13 +38,17 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-3 py-2 rounded-md transition-colors ${
-                  isActive(link.href)
-                    ? 'bg-primary text-white font-semibold'
-                    : 'text-primary-light hover:text-primary font-semibold bg-opacity-10'
+                className={`relative px-3 py-2 rounded-md font-semibold text-primary group ${
+                  isActive(link.href) ? '' : 'hover:text-primary'
                 }`}
               >
                 {link.label}
+                <span
+                  className={`absolute left-1/2 -translate-x-1/2 bottom-1 h-[3px] w-8 rounded bg-primary transition-all duration-300
+                    ${isActive(link.href)
+                      ? 'opacity-100 scale-x-100'
+                      : 'opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100'}`}
+                />
               </Link>
             ))}
           </div>
@@ -71,14 +75,18 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`block px-3 py-2 rounded-md font-semibold ${
-                  isActive(link.href)
-                    ? 'bg-primary text-white'
-                    : 'hover:text-primary hover:font-semibold hover:bg-opacity-10'
+                className={`relative block px-3 py-2 rounded-md font-semibold text-primary group ${
+                  isActive(link.href) ? '' : 'hover:text-primary'
                 }`}
                 onClick={() => setIsOpen(false)}
               >
                 {link.label}
+                <span
+                  className={`absolute left-1/2 -translate-x-1/2 bottom-1 h-[3px] w-8 rounded bg-primary transition-all duration-300
+                    ${isActive(link.href)
+                      ? 'opacity-100 scale-x-100'
+                      : 'opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100'}`}
+                />
               </Link>
             ))}
           </div>
