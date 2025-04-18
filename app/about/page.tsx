@@ -1,163 +1,92 @@
 import React from "react";
 import Link from "next/link";
-import { Terminal, Code, Image, Share2, Palette } from "lucide-react";
+import { Terminal, Image, Share2, Palette } from "lucide-react";
 
 const About: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-center text-indigo-800">
-        À propos du Générateur d'ASCII Art
+      <h1 className="text-xl md:text-2xl xl:text-3xl font-bold mb-6 text-center text-primary">
+        À propos du Générateur d&apos;ASCII Art
       </h1>
 
-      <div className="bg-white p-8 rounded-lg shadow-md mb-8">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-          Qu'est-ce que l'ASCII Art?
+      <div className="bg-white p-4 md:p-6 xl:p-8 rounded-lg shadow-md mb-8 max-sm:text-justify max-sm:text-sm">
+        <h2 className="text-lg sm:text-xl md:text-2xl xl:text-3xl font-semibold mb-4 text-gray-800">
+          L&apos;ASCII Art&nbsp;: l&apos;art de coder des images avec du texte
         </h2>
         <p className="text-gray-700 mb-4">
-          L'ASCII art est une technique artistique qui utilise des caractères du
-          code ASCII (American Standard Code for Information Interchange) pour
-          créer des images. Cette forme d'art a émergé dans les années 1960 et
-          est devenue populaire avec l'avènement des premiers ordinateurs et
-          imprimantes.
+          L&apos;ASCII art est une forme d&apos;art numérique née dans les années 1960, qui consiste à représenter des images en utilisant uniquement des caractères du clavier. Véritable héritage de l&apos;époque des premiers ordinateurs et terminaux, il allie créativité, astuce et minimalisme.
         </p>
         <p className="text-gray-700 mb-4">
-          Avant l'ère des interfaces graphiques modernes, l'ASCII art était un
-          moyen créatif d'afficher des images en utilisant uniquement des
-          caractères textuels. Cette forme d'art a été largement utilisée dans
-          les premiers jeux vidéo, les BBS (Bulletin Board Systems), les
-          signatures d'e-mail, et même dans l'art numérique.
+          Avant l&apos;arrivée des interfaces graphiques, l&apos;ASCII art permettait de donner vie à des illustrations, logos ou portraits sur des écrans et imprimantes limités au texte. Aujourd&apos;hui, il séduit toujours par son esthétique rétro, sa simplicité et son côté ludique.
         </p>
         <p className="text-gray-700">
-          Aujourd'hui, l'ASCII art continue d'être apprécié pour son esthétique
-          rétro et sa simplicité. Il est utilisé dans divers contextes, des
-          signatures d'e-mail aux jeux vidéo rétro, en passant par l'art
-          numérique et les interfaces en ligne de commande.
+          Que ce soit pour personnaliser un profil, décorer un terminal, partager sur les réseaux ou simplement s&apos;amuser, l&apos;ASCII art est un terrain d&apos;expression unique où chaque caractère compte.
         </p>
       </div>
 
-      <div className="bg-white p-8 rounded-lg shadow-md mb-8">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-          Fonctionnalités de notre générateur
+      <div className="bg-white p-4 md:p-6 xl:p-8 rounded-lg shadow-md mb-8 max-sm:text-justify max-sm:text-sm">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-4 text-gray-800">
+          Pourquoi utiliser notre générateur&nbsp;?
         </h2>
-
+        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-4">
+          <li>Transformez facilement vos <strong>images</strong> ou <strong>textes</strong> en œuvres ASCII originales.</li>
+          <li>Choisissez parmi plusieurs <strong>styles de caractères</strong> (classiques, blocs, symboles, etc.).</li>
+          <li>Ajustez la <strong>résolution</strong>, la <strong>correction des proportions</strong> et la <strong>palette de couleurs</strong> pour un rendu sur mesure.</li>
+          <li>Prévisualisez, zoomez, copiez, partagez ou téléchargez vos créations en un clic.</li>
+          <li>Accessible sur tous les supports (ordinateur, mobile, tablette) avec une interface moderne et intuitive.</li>
+        </ul>
         <div className="grid md:grid-cols-2 gap-6">
           <div className="flex items-start">
             <div className="flex-shrink-0 mt-1">
               <Terminal className="h-6 w-6 text-indigo-600" />
             </div>
             <div className="ml-4">
-              <h3 className="text-lg font-medium text-gray-800">
-                Conversion de texte en ASCII
-              </h3>
-              <p className="mt-1 text-gray-600">
-                Transformez n'importe quel texte en art ASCII avec différentes
-                polices et styles. Personnalisez les couleurs et téléchargez
-                votre création.
-              </p>
+              <span className="font-semibold text-gray-800">Conversion de texte</span>
+              <p className="text-gray-600 text-sm">Tapez ou collez un texte pour le transformer en ASCII art instantanément.</p>
             </div>
           </div>
-
           <div className="flex items-start">
             <div className="flex-shrink-0 mt-1">
-              <Image className="h-6 w-6 text-indigo-600" />
+              <Image className="h-6 w-6 text-indigo-600" alt="Icône conversion image" />
             </div>
             <div className="ml-4">
-              <h3 className="text-lg font-medium text-gray-800">
-                Conversion d'images en ASCII
-              </h3>
-              <p className="mt-1 text-gray-600">
-                Téléchargez n'importe quelle image et transformez-la en art
-                ASCII détaillé. Ajustez la résolution et les caractères utilisés
-                pour un résultat optimal.
-              </p>
+              <span className="font-semibold text-gray-800">Conversion d&apos;images</span>
+              <p className="text-gray-600 text-sm">Importez une photo ou un dessin pour obtenir sa version ASCII personnalisée.</p>
             </div>
           </div>
-
           <div className="flex items-start">
             <div className="flex-shrink-0 mt-1">
               <Palette className="h-6 w-6 text-indigo-600" />
             </div>
             <div className="ml-4">
-              <h3 className="text-lg font-medium text-gray-800">
-                Options de personnalisation
-              </h3>
-              <p className="mt-1 text-gray-600">
-                Personnalisez vos créations avec différentes polices, couleurs,
-                et ensembles de caractères. Ajustez la résolution et inversez
-                les couleurs pour des effets uniques.
-              </p>
+              <span className="font-semibold text-gray-800">Options avancées</span>
+              <p className="text-gray-600 text-sm">Résolution, couleurs, inversion, caractères personnalisés, correction des proportions… tout est paramétrable.</p>
             </div>
           </div>
-
           <div className="flex items-start">
             <div className="flex-shrink-0 mt-1">
               <Share2 className="h-6 w-6 text-indigo-600" />
             </div>
             <div className="ml-4">
-              <h3 className="text-lg font-medium text-gray-800">
-                Partage et téléchargement
-              </h3>
-              <p className="mt-1 text-gray-600">
-                Copiez facilement votre ASCII art dans le presse-papiers ou
-                téléchargez-le sous forme de fichier texte. Partagez vos
-                créations avec vos amis ou utilisez-les dans vos projets.
-              </p>
+              <span className="font-semibold text-gray-800">Partage et export</span>
+              <p className="text-gray-600 text-sm">Copiez, partagez ou téléchargez facilement vos créations ASCII pour les utiliser partout.</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white p-8 rounded-lg shadow-md mb-8">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-          Technologies utilisées
+      <div className="bg-white p-4 md:p-6 xl:p-8 rounded-lg shadow-md mb-8 max-sm:text-justify max-sm:text-sm">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-4 text-gray-800">
+          Envie d&apos;essayer&nbsp;?
         </h2>
-        <p className="text-gray-700 mb-4">
-          Notre générateur d'ASCII art est construit avec les technologies web
-          modernes suivantes:
+        <p className="text-gray-700 mb-6">
+          Lancez-vous et découvrez la magie de l&apos;ASCII art en quelques clics. Que vous soyez nostalgique du rétro, amateur de pixel art ou simplement curieux, ce générateur est fait pour vous&nbsp;!
         </p>
-        <ul className="list-disc pl-5 space-y-2 text-gray-700">
-          <li>
-            <strong>React:</strong> Une bibliothèque JavaScript pour construire
-            des interfaces utilisateur interactives.
-          </li>
-          <li>
-            <strong>TypeScript:</strong> Un sur-ensemble typé de JavaScript qui
-            améliore la qualité du code.
-          </li>
-          <li>
-            <strong>Tailwind CSS:</strong> Un framework CSS utilitaire pour
-            créer des designs personnalisés rapidement.
-          </li>
-          <li>
-            <strong>Figlet:</strong> Une bibliothèque pour générer des textes en
-            ASCII art avec différentes polices.
-          </li>
-          <li>
-            <strong>Canvas API:</strong> Utilisée pour le traitement d'images et
-            la conversion en ASCII art.
-          </li>
-          <li>
-            <strong>React Router:</strong> Pour la navigation entre les
-            différentes pages de l'application.
-          </li>
-        </ul>
-      </div>
-
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-4 text-indigo-800">
-          Prêt à créer votre propre ASCII Art?
-        </h2>
         <div className="flex flex-wrap justify-center gap-4">
-          <Link
-            href="/text-to-ascii"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md"
-          >
+          <Link href="/text-to-ascii" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md">
             Convertir du texte
           </Link>
-          <Link
-            href="/image-to-ascii"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md"
-          >
+          <Link href="/image-to-ascii" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md">
             Convertir une image
           </Link>
         </div>

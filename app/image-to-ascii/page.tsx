@@ -106,7 +106,7 @@ export default function ImageToAscii() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-center text-indigo-800">
+      <h1 className="text-xl md:text-2xl xl:ext-3xl font-bold mb-6 text-center text-primary">
         Convertir une image en ASCII Art
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -136,7 +136,7 @@ export default function ImageToAscii() {
             />
           )}
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white sm:p-6 rounded-lg shadow-md">
           <AsciiResult
             backgroundColor={backgroundColor}
             zoom={zoom}

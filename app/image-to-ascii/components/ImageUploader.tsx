@@ -53,13 +53,13 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, onImageChan
           }`}
         >
           <input {...getInputProps()} />
-          <Upload className="h-12 w-12 mx-auto mb-4 text-indigo-500" />
-          <p className="text-gray-700 mb-2">
+          <Upload className="max-sm:size-8 h-12 w-12 mx-auto mb-4 text-indigo-500" />
+          <p className="text-xs sm:text-sm text-gray-700 mb-2">
             {isDragActive
               ? 'Déposez l\'image ici...'
               : 'Glissez-déposez une image ici, ou cliquez pour sélectionner une image'}
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-xs sm:text-sm text-gray-500">
             (Seuls les fichiers image sont acceptés)
           </p>
         </div>
@@ -70,7 +70,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, onImageChan
             alt="Uploaded"
             width={600}
             height={400}
-            className="w-full h-auto rounded-lg border border-gray-300"
+            className="w-full h-auto max-h-[70vh] rounded-lg border border-gray-300"
             unoptimized
           />
           <button

@@ -26,7 +26,7 @@ export function Footer() {
                 <Github className="h-5 w-5" />
               </a>
               <a 
-                href="" 
+                href="https://www.linkedin.com/in/don-dy-iovann-atcho/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-gray-300 hover:text-white transition-colors"

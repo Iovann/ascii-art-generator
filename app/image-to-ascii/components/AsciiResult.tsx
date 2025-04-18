@@ -24,7 +24,7 @@ export const AsciiResult: React.FC<AsciiResultProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-800">Résultat</h2>
+        <h2 className="text-base sm:text-xl font-semibold text-gray-800">Résultat</h2>
         <div className="flex space-x-2">
           <button
             onClick={onZoomOut}

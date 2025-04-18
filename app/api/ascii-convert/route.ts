@@ -50,7 +50,6 @@ export async function POST(request: Request) {
       inverted: false,
       preserveColors: true,
       width: 300,
-      // Valeur par défaut du facteur de correction (peut être ajusté selon le rendu souhaité)
       aspectCorrection: 0.5,
     };
 
@@ -59,19 +58,21 @@ export async function POST(request: Request) {
       if (configStr) {
         config = { ...config, ...JSON.parse(configStr) };
       }
-    } catch (error) {
+    } catch {
       console.warn(
         "Erreur de parsing de la configuration, utilisation des valeurs par défaut"
       );
     }
 
-    const buffer = Buffer.from(await imageFile.arrayBuffer());
+    const arrayBuffer = await imageFile.arrayBuffer();
+const buffer = Buffer.from(arrayBuffer as ArrayBuffer);
     let metadata = await sharp(buffer).metadata();
 
     // Réduction systématique des images trop grandes
     const MAX_DIM = 800; // Taille raisonnable pour le traitement ASCII
     let processBuffer = buffer;
     if ((metadata.width || 0) > MAX_DIM || (metadata.height || 0) > MAX_DIM) {
+      // @ts-expect-error - Ignorer les problèmes de typage avec sharp
       processBuffer = await sharp(buffer)
         .resize(MAX_DIM, MAX_DIM, { fit: 'inside' })
         .toBuffer();
@@ -218,7 +219,6 @@ function processImage(
     charSet = "standard",
     customChars = "",
     inverted = false,
-    preserveColors = true,
   } = config;
 
   // Sélectionner l'ensemble de caractères
