@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Navbar from "@/src/components/Navbar";
 import Footer from "@/src/components/Footer";
 import "./globals.css";
@@ -32,6 +34,7 @@ export default function RootLayout({
         <Navbar />
         {children}
         <Footer />
+        <ToastContainer />
       </body>
     </html>
   );

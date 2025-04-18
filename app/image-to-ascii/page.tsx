@@ -105,7 +105,7 @@ export default function ImageToAscii() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-xl md:text-2xl xl:ext-3xl font-bold mb-6 text-center text-primary">
         Convertir une image en ASCII Art
       </h1>

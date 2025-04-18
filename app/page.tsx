@@ -7,7 +7,8 @@ export default function Home() {
   return (
     <div className=" mx-auto">
       <HeroSection />
-      <div className="container mx-auto">
+
+      <div className="max-w-7xl mx-auto">
         <CtaSection />
         <Description />
       </div>

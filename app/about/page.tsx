@@ -4,7 +4,7 @@ import { Terminal, Image, Share2, Palette } from "lucide-react";
 
 const About: React.FC = () => {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-xl md:text-2xl xl:text-3xl font-bold mb-6 text-center text-primary">
         À propos du Générateur d&apos;ASCII Art
       </h1>
@@ -47,7 +47,7 @@ const About: React.FC = () => {
           </div>
           <div className="flex items-start">
             <div className="flex-shrink-0 mt-1">
-              <Image className="h-6 w-6 text-indigo-600" alt="Icône conversion image" />
+              <Image className="h-6 w-6 text-indigo-600" />
             </div>
             <div className="ml-4">
               <span className="font-semibold text-gray-800">Conversion d&apos;images</span>
