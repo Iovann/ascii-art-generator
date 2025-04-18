@@ -8,7 +8,7 @@ export function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-6 md:mb-0">
             <p className="text-center md:text-left text-lg font-medium">
-              © {new Date().getFullYear()} ASCII Art Generator
+              {new Date().getFullYear()} ASCII Art Generator
             </p>
             <p className="text-gray-400 text-sm mt-1">
               Transformez vos idées en art ASCII
@@ -21,7 +21,8 @@ export function Footer() {
                 href="https://github.com/Iovann" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-gray-300 hover:text-white transition-colors"
+                className="text-gray-300 hover:text-white transition-colors flex items-center"
+                aria-label="Profil GitHub de Iovann"
               >
                 <Github className="h-5 w-5" />
               </a>
@@ -29,7 +30,8 @@ export function Footer() {
                 href="https://www.linkedin.com/in/don-dy-iovann-atcho/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-gray-300 hover:text-white transition-colors"
+                className="text-gray-300 hover:text-white transition-colors flex items-center"
+                aria-label="Profil LinkedIn de Iovann"
               >
                 <Linkedin className="h-5 w-5" />
               </a>

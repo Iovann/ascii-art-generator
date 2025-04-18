@@ -50,6 +50,14 @@ export function AsciiControls({
       ? Math.max(0.3, baseMax * (refSize / Math.max(imageWidth, imageHeight)))
       : baseMax;
 
+  // Valeur par défaut à la moitié du max
+  const defaultResolution = Math.round((0.1 + maxResolution) / 2 * 100) / 100;
+  React.useEffect(() => {
+    if (resolution === undefined || resolution === null || resolution === 0) {
+      onResolutionChange(defaultResolution);
+    }
+  }, [maxResolution, defaultResolution, onResolutionChange, resolution]);
+
   return (
     <div className="space-y-4">
       <div className="mb-4">

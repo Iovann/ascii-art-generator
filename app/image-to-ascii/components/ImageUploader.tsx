@@ -19,6 +19,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, onImageChan
         toast.error('Veuillez télécharger une image valide');
         return;
       }
+      // Vérification de la taille du fichier (max 5 Mo)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('La taille de l\'image ne doit pas dépasser 5 Mo');
+        return;
+      }
       const reader = new FileReader();
       reader.onload = () => {
         const img = new window.Image();

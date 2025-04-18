@@ -6,7 +6,7 @@ export function HeroSection () {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0 " 
           style={{ 
-            backgroundImage: 'url("/images/matrix.jpg")',
+            backgroundImage: "url('/images/matrix.webp')",
           }}
         >
         </div>
