@@ -2,6 +2,8 @@
 import { NextResponse } from "next/server";
 import sharp from "sharp";
 
+export const runtime = 'nodejs';
+
 // Définition des ensembles de caractères ASCII disponibles
 const asciiCharSets = {
   standard: "@%#*+=-:. ",
