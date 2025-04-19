@@ -1,11 +1,11 @@
 // app/api/convert-to-ascii/route.ts
 import { NextResponse } from "next/server";
-import sharp from "sharp";
+import Jimp from "jimp";
 
 export const runtime = 'nodejs';
 
 // Définition des ensembles de caractères ASCII disponibles
-const asciiCharSets = {
+const asciiCharSets: Record<string, string> = {
   standard: "@%#*+=-:. ",
   detailed:
     "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. ",
@@ -26,7 +26,6 @@ interface AsciiConfig {
   preserveColors: boolean;
   backgroundColor?: string;
   width?: number;
-  // Nouveau paramètre pour permettre l'ajustement manuel des proportions
   aspectCorrection?: number;
 }
 
@@ -67,33 +66,38 @@ export async function POST(request: Request) {
     }
 
     const arrayBuffer = await imageFile.arrayBuffer();
-const buffer = Buffer.from(arrayBuffer as ArrayBuffer);
-    let metadata = await sharp(buffer).metadata();
+    const buffer = Buffer.from(arrayBuffer as ArrayBuffer);
+
+    // --- Remplacement de SHARP par JIMP ---
+    // Lecture de l'image avec Jimp
+    let image = await Jimp.read(buffer);
 
     // Réduction systématique des images trop grandes
-    const MAX_DIM = 800; // Taille raisonnable pour le traitement ASCII
-    let processBuffer = buffer;
-    if ((metadata.width || 0) > MAX_DIM || (metadata.height || 0) > MAX_DIM) {
-      // @ts-expect-error - Ignorer les problèmes de typage avec sharp
-      processBuffer = await sharp(buffer)
-        .resize(MAX_DIM, MAX_DIM, { fit: 'inside' })
-        .toBuffer();
-      metadata = await sharp(processBuffer).metadata();
+    const MAX_DIM = 800;
+    if (image.getWidth() > MAX_DIM || image.getHeight() > MAX_DIM) {
+      image = image.resize(MAX_DIM, Jimp.AUTO);
     }
 
     const MAX_WIDTH = 400;
     const targetWidth = Math.min(config.width || 100, MAX_WIDTH);
-    const aspectRatio = (metadata.height || 1) / (metadata.width || 1);
-    
-    // Utilisation du facteur de correction pour maintenir les proportions (0.65 donne plus de hauteur, proche du rendu monospace)
+    const aspectRatio = image.getHeight() / image.getWidth();
     const aspectCorrection = config.aspectCorrection || 0.65;
     const targetHeight = Math.floor(targetWidth * aspectRatio * aspectCorrection);
 
-    // Traiter l'image pour obtenir les pixels (toujours sur l'image réduite)
-    const processedImage = await sharp(processBuffer)
-      .resize(targetWidth, targetHeight, { fit: "fill" }) // Utiliser 'fill' pour respecter exactement les dimensions
-      .raw()
-      .toBuffer({ resolveWithObject: true });
+    // Redimensionner à la taille finale
+    image = image.resize(targetWidth, targetHeight);
+
+    // Récupérer les pixels
+    const { data, width, height } = image.bitmap;
+    // Jimp retourne un buffer RGBA
+    const processedImage = {
+      data,
+      info: {
+        width,
+        height,
+        channels: 4, // RGBA
+      },
+    };
 
     // Générer l'ASCII art
     const { asciiArt, colorData } = processImage(
@@ -109,12 +113,10 @@ const buffer = Buffer.from(arrayBuffer as ArrayBuffer);
       const lineHeight = fontSize;
       const padding = 0;
       const lines = asciiArt.split("\n");
-      
       // Maintenir les mêmes proportions pour la sortie finale
       const charWidth = fontSize * 0.6; // Facteur typique pour une police monospace
       const outputWidth = targetWidth * charWidth + padding * 2;
       const outputHeight = targetHeight * fontSize + padding * 2;
-
       const svgImage = `
         <svg width="${outputWidth}" height="${outputHeight}" xmlns="http://www.w3.org/2000/svg">
           <rect width="100%" height="100%" fill="${
@@ -136,26 +138,21 @@ const buffer = Buffer.from(arrayBuffer as ArrayBuffer);
           </text>
         </svg>
       `;
-
-      const finalImage = await sharp(Buffer.from(svgImage)).png().toBuffer();
-
-      return new Response(finalImage, {
+      // Retourner le SVG directement (plus de conversion PNG serverless)
+      return new Response(svgImage, {
         headers: {
-          "Content-Type": "image/png",
-          "Content-Disposition": 'inline; filename="ascii-art.png"',
+          "Content-Type": "image/svg+xml",
+          "Content-Disposition": 'inline; filename="ascii-art.svg"',
         },
       });
     } else {
       // Version avec préservation des couleurs
       const fontSize = 8;
       const charWidth = fontSize * 0.6;
-      // Ajustement pour respecter les proportions
       const charHeight = fontSize;
-      
       const canvasWidth = targetWidth * charWidth;
       const canvasHeight = targetHeight * charHeight;
 
-      // Préparer un SVG qui préserve les couleurs
       let svgContent = `<svg width="${canvasWidth}" height="${canvasHeight}" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" fill="${
           config.backgroundColor || "#ffffff"
@@ -169,24 +166,21 @@ const buffer = Buffer.from(arrayBuffer as ArrayBuffer);
             svgContent += `<text x="${x * charWidth}" y="${
               y * charHeight + fontSize
             }" 
-                                 font-family="monospace" font-size="${fontSize}px" 
-                                 letter-spacing="0"
-                                 fill="rgb(${r},${g},${b})">${char
+                                     font-family="monospace" font-size="${fontSize}px" 
+                                     letter-spacing="0"
+                                     fill="rgb(${r},${g},${b})">${char
               .replace(/&/g, "&amp;")
               .replace(/</g, "&lt;")
               .replace(/>/g, "&gt;")}</text>`;
           }
         }
       }
-
       svgContent += `</svg>`;
-
-      const finalImage = await sharp(Buffer.from(svgContent)).png().toBuffer();
-
-      return new Response(finalImage, {
+      // Retourner le SVG coloré directement
+      return new Response(svgContent, {
         headers: {
-          "Content-Type": "image/png",
-          "Content-Disposition": 'inline; filename="ascii-art-color.png"',
+          "Content-Type": "image/svg+xml",
+          "Content-Disposition": 'inline; filename="ascii-art-color.svg"',
         },
       });
     }
@@ -211,60 +205,42 @@ const buffer = Buffer.from(arrayBuffer as ArrayBuffer);
  */
 function processImage(
   data: Buffer,
-  info: sharp.OutputInfo,
+  info: { width: number; height: number; channels: number },
   config: AsciiConfig
 ) {
   const { width, height, channels } = info;
-
-  // Utiliser les paramètres de configuration
   const {
     charSet = "standard",
     customChars = "",
     inverted = false,
   } = config;
-
-  // Sélectionner l'ensemble de caractères
   const chars =
     charSet === "custom" && customChars
       ? customChars
-      : asciiCharSets[charSet as keyof typeof asciiCharSets] ||
-        asciiCharSets.standard;
-
+      : asciiCharSets[charSet] || asciiCharSets["standard"];
   let asciiResult = "";
-  const colorData: Array<{ char: string; r: number; g: number; b: number }> =
-    [];
-
-  // Traiter chaque pixel
+  const colorData: { char: string; r: number; g: number; b: number }[] = [];
   for (let y = 0; y < height; y++) {
     let rowString = "";
-
     for (let x = 0; x < width; x++) {
       const idx = (y * width + x) * channels;
-
-      // Extraire les composantes RGB
-      const r = data[idx] || 0;
-      const g = channels > 1 ? data[idx + 1] : r;
-      const b = channels > 2 ? data[idx + 2] : g;
-
+      const r = data[idx + 0];
+      const g = data[idx + 1];
+      const b = data[idx + 2];
       // Calculer la luminosité
       const brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-
       // Sélectionner le caractère en fonction de la luminosité
       const charIndex = Math.floor(
         inverted
           ? (1 - brightness) * (chars.length - 1)
           : brightness * (chars.length - 1)
       );
-
       const char = chars[charIndex] || chars[0];
-
       rowString += char;
       colorData.push({ char, r, g, b });
     }
-
     asciiResult += rowString + "\n";
   }
-
   return {
     asciiArt: asciiResult, // Version texte brut
     colorData, // Données de couleur par caractère
